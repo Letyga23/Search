@@ -6,7 +6,7 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    ExistingTablesWindow w;
+    MainWindow w;
 //    FilterDialog w;
     w.show();
     return a.exec();

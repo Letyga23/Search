@@ -35,7 +35,7 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
-class ExistingTablesWindow : public QMainWindow
+class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
@@ -128,8 +128,8 @@ private:
 
 
 public:
-    ExistingTablesWindow(QWidget* parent = nullptr);
-    ~ExistingTablesWindow();
+    MainWindow(QWidget* parent = nullptr);
+    ~MainWindow();
 
 private:
     void updateCurrentPageInLabel();
