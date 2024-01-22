@@ -86,6 +86,7 @@ private:
     QHBoxLayout* _horizontalLayout_2;
     QHBoxLayout* _horizontalLayout_3;
     QHBoxLayout* _horizontalLayout_4;
+    QHBoxLayout* _horizontalLayout_5;
 
     QComboBox* _searchColumn;
     QComboBox* _sortingColumn;
@@ -104,12 +105,16 @@ private:
     QPushButton* _prevButton;
     QPushButton* _nextButton;
 
+    QVector<QPushButton*> _numberRows;
+
     QSpacerItem* _horizontalSpacer;
     QSpacerItem* _horizontalSpacer_2;
     QSpacerItem* _horizontalSpacer_3;
     QSpacerItem* _horizontalSpacer_4;
     QSpacerItem* _horizontalSpacer_5;
     QSpacerItem* _horizontalSpacer_6;
+    QSpacerItem* _horizontalSpacer_7;
+    QSpacerItem* _horizontalSpacer_8;
 
     QTableView* _tableView;
 
@@ -153,6 +158,7 @@ private:
     void renderingLayout_2();
     void renderingLayout_3();
     void renderingLayout_4();
+    void renderingLayout_5();
     void blockAndOperate(QObject* widget, const std::function<void()>& operation);
     void setValueToMaxPage(int maxPage);
 
@@ -169,5 +175,6 @@ private slots:
     void on_checkBox_stateChanged(int arg1);
     void on_pushButton_search_clicked();
     void onHeaderClicked(int logicalIndex);
+    void changeNumberRows();
 };
 #endif // MAINWINDOW_H

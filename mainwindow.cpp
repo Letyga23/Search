@@ -157,6 +157,9 @@ void ExistingTablesWindow::connects()
     connect(_nextButton, &QPushButton::clicked, this, &ExistingTablesWindow::on_nextButton_clicked);
     connect(_prevButton, &QPushButton::clicked, this, &ExistingTablesWindow::on_prevButton_clicked);
 
+    for(QPushButton* buttonNum : _numberRows)
+        connect(buttonNum, &QPushButton::clicked, this, &ExistingTablesWindow::changeNumberRows);
+
     connect(_searchText, &QLineEdit::textChanged, this, &ExistingTablesWindow::on_searchText_textChanged);
     connect(_pageNumberToNavigate, &QLineEdit::textChanged, this, &ExistingTablesWindow::on_pageNumberToNavigate_textChanged);
 
@@ -176,6 +179,7 @@ void ExistingTablesWindow::renderingInterface()
     workingWithTableView();
     renderingLayout_3();
     renderingLayout_4();
+    renderingLayout_5();
 
     setCentralWidget(_centralwidget);
     _statusBar = new QStatusBar(this);
@@ -184,10 +188,6 @@ void ExistingTablesWindow::renderingInterface()
     QList<QComboBox*> comboBoxs = findChildren<QComboBox*>();
     for(QComboBox* comboBox : comboBoxs)
         comboBox->setStyleSheet(_comboBoxStyleSheet);
-
-    QList<QPushButton*> pushButtons = findChildren<QPushButton*>();
-    for(QPushButton* pushButton : pushButtons)
-        pushButton->setStyleSheet(_pushButtonStyleSheet);
 }
 
 void ExistingTablesWindow::renderingLayout_1()
@@ -218,12 +218,14 @@ void ExistingTablesWindow::renderingLayout_1()
     _pushButton_search->setFont(_font2);
     _pushButton_search->setIcon(QIcon(":/assets/поиск.png"));
     _pushButton_search->setIconSize(QSize(32, 32));
+    _pushButton_search->setStyleSheet(_pushButtonStyleSheet);
     _horizontalLayout->addWidget(_pushButton_search);
 
     _clearSearch = new QPushButton(_centralwidget);
     _clearSearch->setFont(_font2);
     _clearSearch->setIcon(QIcon(":/assets/очистить поиск.png"));
     _clearSearch->setIconSize(QSize(32, 32));
+    _clearSearch->setStyleSheet(_pushButtonStyleSheet);
     _horizontalLayout->addWidget(_clearSearch);
 
     _horizontalSpacer_6 = new QSpacerItem(209, 20);
@@ -233,12 +235,14 @@ void ExistingTablesWindow::renderingLayout_1()
     _addFilter->setFont(_font2);
     _addFilter->setIcon(QIcon(":/assets/добавить фильтр.png"));
     _addFilter->setIconSize(QSize(32, 32));
+    _addFilter->setStyleSheet(_pushButtonStyleSheet);
     _horizontalLayout->addWidget(_addFilter);
 
     _clearFilter = new QPushButton(_centralwidget);
     _clearFilter->setFont(_font2);
     _clearFilter->setIcon(QIcon(":/assets/сбросить фильтр.png"));
     _clearFilter->setIconSize(QSize(32, 32));
+    _clearFilter->setStyleSheet(_pushButtonStyleSheet);
     _horizontalLayout->addWidget(_clearFilter);
 
     _verticalLayout->addLayout(_horizontalLayout);
@@ -276,6 +280,7 @@ void ExistingTablesWindow::renderingLayout_2()
     _resetTable = new QPushButton(_centralwidget);
     _resetTable->setFont(_font2);
     _resetTable->setText("Сбросить \nрезультат");
+    _resetTable->setStyleSheet(_pushButtonStyleSheet);
     _horizontalLayout_2->addWidget(_resetTable);
 
     _verticalLayout->addLayout(_horizontalLayout_2);
@@ -325,6 +330,7 @@ void ExistingTablesWindow::renderingLayout_4()
     _prevButton = new QPushButton(_centralwidget);
     _prevButton->setFont(font);
     _prevButton->setText("<<");
+    _prevButton->setStyleSheet(_pushButtonStyleSheet);
     _horizontalLayout_4->addWidget(_prevButton);
 
     _horizontalSpacer_2 = new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
@@ -347,9 +353,40 @@ void ExistingTablesWindow::renderingLayout_4()
     _nextButton = new QPushButton(_centralwidget);
     _nextButton->setFont(font);
     _nextButton->setText(">>");
+    _nextButton->setStyleSheet(_pushButtonStyleSheet);
     _horizontalLayout_4->addWidget(_nextButton);
 
     _verticalLayout->addLayout(_horizontalLayout_4);
+}
+
+void ExistingTablesWindow::renderingLayout_5()
+{
+    QFont font;
+    font.setFamily("Segoe UI");
+    font.setPointSize(14);
+
+    _horizontalLayout_5 = new QHBoxLayout();
+
+    _horizontalSpacer_7 = new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
+    _horizontalLayout_5->addItem(_horizontalSpacer_7);
+
+    int tact = 5;
+    for(int num = 10; num <= 20; num += tact)
+    {
+         QPushButton* numberRows = new QPushButton(_centralwidget);
+         numberRows->setFont(font);
+         numberRows->setText(QString::number(num));
+         numberRows->setObjectName("_numberRows_" + QString::number(num));
+         _horizontalLayout_5->addWidget(numberRows);
+         _numberRows.push_back(numberRows);
+    }
+
+    _numberRows[0]->setEnabled(false);
+
+    _horizontalSpacer_8 = new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
+    _horizontalLayout_5->addItem(_horizontalSpacer_7);
+
+    _verticalLayout->addLayout(_horizontalLayout_5);
 }
 
 
@@ -554,9 +591,13 @@ void ExistingTablesWindow::goToPrevModel()
 
 void ExistingTablesWindow::blockingInterface(bool flag)
 {
-    QList<QPushButton*> buttons = _centralwidget->findChildren<QPushButton*>();
-    for(QPushButton* button : buttons)
-        button->setEnabled(flag);
+    _pushButton_search->setEnabled(flag);
+    _clearSearch->setEnabled(flag);
+    _addFilter->setEnabled(flag);
+    _clearFilter->setEnabled(flag);
+    _resetTable->setEnabled(flag);
+    _prevButton->setEnabled(flag);
+    _nextButton->setEnabled(flag);
 
     QList<QComboBox*> comboBoxs = _centralwidget->findChildren<QComboBox*>();
     for(QComboBox* comboBox : comboBoxs)
@@ -726,4 +767,28 @@ void ExistingTablesWindow::setValueToMaxPage(int maxPage)
     QMutexLocker locker(&mutex);
     _maxPage = maxPage;
     _labelMaxPage->setText(QString::number(_maxPage));
+}
+
+void ExistingTablesWindow::changeNumberRows()
+{
+    QPushButton* button = (QPushButton*)sender();
+    QStringList nums;
+    nums = button->objectName().split('_');
+
+    if (nums.size() >= 3)
+        QString num = nums[2];
+    else
+    {
+        qDebug() << "Размер листа " + QString::number(nums.size());
+        return;
+    }
+
+    for(QPushButton* buttonNum : _numberRows)
+        buttonNum->setEnabled(true);
+
+    button->setEnabled(false);
+
+    int num = nums[2].toInt();
+    _rowsPerPage = num;
+    refreshStartModel();
 }
