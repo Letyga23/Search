@@ -790,6 +790,5 @@ void SearchWindow::changeNumberRows()
 
     button->setStyleSheet(_pushButtonStyleSheet);
 
-
     refreshStartModel();
 }

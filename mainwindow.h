@@ -1,5 +1,5 @@
-﻿#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+﻿#ifndef SEARCHWINDOW_H
+#define SEARCHWINDOW_H
 
 #include <QMainWindow>
 #include <QDebug>
@@ -172,4 +172,4 @@ private slots:
     void onHeaderClicked(int logicalIndex);
     void changeNumberRows();
 };
-#endif // MAINWINDOW_H
+#endif // SEARCHWINDOW_H
