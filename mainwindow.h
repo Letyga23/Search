@@ -31,11 +31,7 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
-QT_BEGIN_NAMESPACE
-namespace Ui { class MainWindow; }
-QT_END_NAMESPACE
-
-class MainWindow : public QMainWindow
+class SearchWindow : public QMainWindow
 {
     Q_OBJECT
 
@@ -43,7 +39,6 @@ class MainWindow : public QMainWindow
     int _rowsPerPage;
     int _maxPageModel;
     int _minPageModel;
-    int _limit;
     int _maxPage;
     int _rowCountModel;
     QString _filter;
@@ -128,8 +123,8 @@ private:
 
 
 public:
-    MainWindow(QWidget* parent = nullptr);
-    ~MainWindow();
+    SearchWindow(QWidget* parent = nullptr);
+    ~SearchWindow();
 
 private:
     void updateCurrentPageInLabel();

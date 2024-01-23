@@ -70,6 +70,7 @@ void MyThread::getMaxPage(QString nameTable, int rowsPerPage, QString filters)
     setTask([=]()
     {
         MyThread::sleep(2);
+
         _db->open();
 
         QString request("SELECT COUNT(*) FROM " + nameTable + " WHERE 1=1 " + filters);
@@ -96,6 +97,7 @@ void MyThread::search(QString nameTable, QString column, QString like, QString t
         if(!_resultIsFound)
         {
             _db->open();
+
             QString request("SELECT numbered_rows.№ FROM (SELECT ROW_NUMBER() OVER "
                             "(ORDER BY " + sort + ") AS №, * FROM " + nameTable + " WHERE 1=1 " + filters +  " LIMIT " + QString::number(limit) + " OFFSET " + QString::number(offset) + ") "
                             "AS numbered_rows WHERE numbered_rows." + column + " LIKE '" + like + typeSearch + "' LIMIT 1");

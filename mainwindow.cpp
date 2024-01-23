@@ -1,7 +1,7 @@
 ﻿#include "mainwindow.h"
 QMutex mutex;
 
-MainWindow::MainWindow(QWidget *parent)
+SearchWindow::SearchWindow(QWidget *parent)
     : QMainWindow(parent)
 {
     assigningValues();
@@ -13,18 +13,17 @@ MainWindow::MainWindow(QWidget *parent)
     refreshStartModel();
 }
 
-MainWindow::~MainWindow()
+SearchWindow::~SearchWindow()
 {
     delete _centralwidget;
 }
 
-void MainWindow::assigningValues()
+void SearchWindow::assigningValues()
 {
     _currentPage = 1;
     _rowsPerPage = 10;
     _maxPageModel = 5;
     _minPageModel = 1;
-    _limit = _rowsPerPage * _maxPageModel;
     _typeSearch = "%";
 
     _tableWorkInDB = "name_pred";
@@ -43,44 +42,44 @@ void MainWindow::assigningValues()
     _font2.setPointSize(12);
 
     _pushButtonStyleSheet = "QPushButton {\n"
-                           "	background-color: #3498db;"
-                           "	border: 1px solid #2980b9;"
-                           "	color: #ffffff;"
-                           "	padding: 5px 10px;"
-                           "	border-radius: 3px;}"
+                            "	background-color: #3498db;"
+                            "	border: 1px solid #2980b9;"
+                            "	color: #ffffff;"
+                            "	padding: 5px 10px;"
+                            "	border-radius: 3px;}"
 
-                           "QPushButton:hover {background-color: #2184cb;border: 1px solid #1c6da5;}"
+                            "QPushButton:hover {background-color: #2184cb;border: 1px solid #1c6da5;}"
 
-                           "QPushButton:pressed {"
-                           "	background-color: #1a548b;"
-                           "	border: 1px solid #174172;}"
+                            "QPushButton:pressed {"
+                            "	background-color: #1a548b;"
+                            "	border: 1px solid #174172;}"
 
-                           "QPushButton:disabled {"
-                           "	background-color: #d3d3d3;"
-                           "	color: #555555;"
-                           "	border: 1px solid #a3a3a3;}";
+                            "QPushButton:disabled {"
+                            "	background-color: #d3d3d3;"
+                            "	color: #555555;"
+                            "	border: 1px solid #a3a3a3;}";
 
     _comboBoxStyleSheet = "QComboBox {"
-                         "    background-color: #0E9252;"
-                         "    border: 1px solid #2980b9;"
-                         "    color: #ffffff;"
-                         "    padding: 5px;"
-                         "    border-radius: 3px;}"
+                          "    background-color: #0E9252;"
+                          "    border: 1px solid #2980b9;"
+                          "    color: #ffffff;"
+                          "    padding: 5px;"
+                          "    border-radius: 3px;}"
 
-                         "QComboBox:hover {"
-                         "    background-color: #42A977;"
-                         "    border: 1px solid #1c6da5;}"
+                          "QComboBox:hover {"
+                          "    background-color: #42A977;"
+                          "    border: 1px solid #1c6da5;}"
 
-                         "QComboBox:disabled {"
-                         "    background-color: #d3d3d3;"
-                         "    color: #555555;"
-                         "    border: 1px solid #a3a3a3;}";
+                          "QComboBox:disabled {"
+                          "    background-color: #d3d3d3;"
+                          "    color: #555555;"
+                          "    border: 1px solid #a3a3a3;}";
 
     _searchTimer.setSingleShot(true);
     _goToPageTimer.setSingleShot(true);
 }
 
-void MainWindow::workingWithTableView()
+void SearchWindow::workingWithTableView()
 {
     _tableView = new QTableView(_centralwidget);
     _tableView->setFont(_font2);
@@ -107,7 +106,7 @@ void MainWindow::workingWithTableView()
     _tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
 }
 
-void MainWindow::creatingObjects()
+void SearchWindow::creatingObjects()
 {
     for(int i = 0; i < 3; i++)
         _models.push_back(QSharedPointer<QSqlQueryModel>::create());
@@ -120,17 +119,17 @@ void MainWindow::creatingObjects()
     _getMaxPageTread = QSharedPointer<MyThread>::create();
 }
 
-void MainWindow::connects()
+void SearchWindow::connects()
 {
-    connect(_startTreadModel.get(), &MyThread::completedSuccessfully, this, &MainWindow::startLoadModelFinished);
-    connect(_nextTreadModel.get(), &MyThread::completedSuccessfully, this, &MainWindow::threadFinished);
-    connect(_prevTreadModel.get(), &MyThread::completedSuccessfully, this, &MainWindow::threadFinished);
-    connect(_getMaxPageTread.get(), &MyThread::returnMaxPage, this, &MainWindow::setValueToMaxPage);
+    connect(_startTreadModel.get(), &MyThread::completedSuccessfully, this, &SearchWindow::startLoadModelFinished);
+    connect(_nextTreadModel.get(), &MyThread::completedSuccessfully, this, &SearchWindow::threadFinished);
+    connect(_prevTreadModel.get(), &MyThread::completedSuccessfully, this, &SearchWindow::threadFinished);
+    connect(_getMaxPageTread.get(), &MyThread::returnMaxPage, this, &SearchWindow::setValueToMaxPage);
 
-    connect(_filterDialog.get(), &FilterDialog::filterSelected, this, &MainWindow::setFilter);
+    connect(_filterDialog.get(), &FilterDialog::filterSelected, this, &SearchWindow::setFilter);
 
-    connect(_sortingColumn, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::refreshStartModel);
-    connect(_typeSorting, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::refreshStartModel);
+    connect(_sortingColumn, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SearchWindow::refreshStartModel);
+    connect(_typeSorting, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SearchWindow::refreshStartModel);
 
     connect(&_searchTimer, &QTimer::timeout, this, [=]()
     {
@@ -147,26 +146,26 @@ void MainWindow::connects()
         }
     });
 
-    connect(_tableView->horizontalHeader(), &QHeaderView::sectionClicked, this, &MainWindow::onHeaderClicked);
+    connect(_tableView->horizontalHeader(), &QHeaderView::sectionClicked, this, &SearchWindow::onHeaderClicked);
 
-    connect(_addFilter, &QPushButton::clicked, this, &MainWindow::on_addFilter_clicked);
-    connect(_clearFilter, &QPushButton::clicked, this, &MainWindow::on_clearFilter_clicked);
-    connect(_pushButton_search, &QPushButton::clicked, this, &MainWindow::on_pushButton_search_clicked);
-    connect(_clearSearch, &QPushButton::clicked, this, &MainWindow::on_clearSearch_clicked);
-    connect(_resetTable, &QPushButton::clicked, this, &MainWindow::on_resetTable_clicked);
-    connect(_nextButton, &QPushButton::clicked, this, &MainWindow::on_nextButton_clicked);
-    connect(_prevButton, &QPushButton::clicked, this, &MainWindow::on_prevButton_clicked);
+    connect(_addFilter, &QPushButton::clicked, this, &SearchWindow::on_addFilter_clicked);
+    connect(_clearFilter, &QPushButton::clicked, this, &SearchWindow::on_clearFilter_clicked);
+    connect(_pushButton_search, &QPushButton::clicked, this, &SearchWindow::on_pushButton_search_clicked);
+    connect(_clearSearch, &QPushButton::clicked, this, &SearchWindow::on_clearSearch_clicked);
+    connect(_resetTable, &QPushButton::clicked, this, &SearchWindow::on_resetTable_clicked);
+    connect(_nextButton, &QPushButton::clicked, this, &SearchWindow::on_nextButton_clicked);
+    connect(_prevButton, &QPushButton::clicked, this, &SearchWindow::on_prevButton_clicked);
 
     for(QPushButton* buttonNum : _numberRows)
-        connect(buttonNum, &QPushButton::clicked, this, &MainWindow::changeNumberRows);
+        connect(buttonNum, &QPushButton::clicked, this, &SearchWindow::changeNumberRows);
 
-    connect(_searchText, &QLineEdit::textChanged, this, &MainWindow::on_searchText_textChanged);
-    connect(_pageNumberToNavigate, &QLineEdit::textChanged, this, &MainWindow::on_pageNumberToNavigate_textChanged);
+    connect(_searchText, &QLineEdit::textChanged, this, &SearchWindow::on_searchText_textChanged);
+    connect(_pageNumberToNavigate, &QLineEdit::textChanged, this, &SearchWindow::on_pageNumberToNavigate_textChanged);
 
-    connect(_checkBox, &QCheckBox::stateChanged, this, &MainWindow::on_checkBox_stateChanged);
+    connect(_checkBox, &QCheckBox::stateChanged, this, &SearchWindow::on_checkBox_stateChanged);
 }
 
-void MainWindow::renderingInterface()
+void SearchWindow::renderingInterface()
 {
     resize(1000, 656);
     setWindowTitle("Поиск");
@@ -190,7 +189,7 @@ void MainWindow::renderingInterface()
         comboBox->setStyleSheet(_comboBoxStyleSheet);
 }
 
-void MainWindow::renderingLayout_1()
+void SearchWindow::renderingLayout_1()
 {
     _horizontalLayout = new QHBoxLayout();
 
@@ -248,7 +247,7 @@ void MainWindow::renderingLayout_1()
     _verticalLayout->addLayout(_horizontalLayout);
 }
 
-void MainWindow::renderingLayout_2()
+void SearchWindow::renderingLayout_2()
 {
     _horizontalLayout_2 = new QHBoxLayout();
 
@@ -286,7 +285,7 @@ void MainWindow::renderingLayout_2()
     _verticalLayout->addLayout(_horizontalLayout_2);
 }
 
-void MainWindow::renderingLayout_3()
+void SearchWindow::renderingLayout_3()
 {
     _horizontalLayout_3 = new QHBoxLayout();
 
@@ -319,7 +318,7 @@ void MainWindow::renderingLayout_3()
     _verticalLayout->addLayout(_horizontalLayout_3);
 }
 
-void MainWindow::renderingLayout_4()
+void SearchWindow::renderingLayout_4()
 {
     QFont font;
     font.setFamily("Segoe UI");
@@ -359,7 +358,7 @@ void MainWindow::renderingLayout_4()
     _verticalLayout->addLayout(_horizontalLayout_4);
 }
 
-void MainWindow::renderingLayout_5()
+void SearchWindow::renderingLayout_5()
 {
     QFont font;
     font.setFamily("Segoe UI");
@@ -373,15 +372,15 @@ void MainWindow::renderingLayout_5()
     int tact = 5;
     for(int num = 10; num <= 20; num += tact)
     {
-         QPushButton* numberRows = new QPushButton(_centralwidget);
-         numberRows->setFont(font);
-         numberRows->setText(QString::number(num));
-         numberRows->setObjectName("_numberRows_" + QString::number(num));
-         _horizontalLayout_5->addWidget(numberRows);
-         _numberRows.push_back(numberRows);
+        QPushButton* numberRows = new QPushButton(_centralwidget);
+        numberRows->setFont(font);
+        numberRows->setText(QString::number(num));
+        numberRows->setObjectName("_numberRows_" + QString::number(num));
+        _horizontalLayout_5->addWidget(numberRows);
+        _numberRows.push_back(numberRows);
     }
 
-    _numberRows[0]->setEnabled(false);
+    _numberRows[0]->setStyleSheet(_pushButtonStyleSheet);
 
     _horizontalSpacer_8 = new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
     _horizontalLayout_5->addItem(_horizontalSpacer_7);
@@ -390,7 +389,7 @@ void MainWindow::renderingLayout_5()
 }
 
 
-void MainWindow::searchInDB()
+void SearchWindow::searchInDB()
 {
     int totalRowCount = _maxPage * _rowsPerPage;
     int limit = 2000;
@@ -414,7 +413,7 @@ void MainWindow::searchInDB()
     }
 }
 
-void MainWindow::initializationStartModel()
+void SearchWindow::initializationStartModel()
 {
     _statusBar->showMessage("Идёт загрузка данных...");
     _tableView->setModel(nullptr);
@@ -430,12 +429,12 @@ void MainWindow::initializationStartModel()
     loadingModel(_prevTreadModel, _models[2], prevOffset);
 }
 
-void MainWindow::loadingModel(QSharedPointer<MyThread> thread, QSharedPointer<QSqlQueryModel> model, int offset)
+void SearchWindow::loadingModel(QSharedPointer<MyThread> thread, QSharedPointer<QSqlQueryModel> model, int offset)
 {
-    thread->completion(std::ref(model), _tableWorkInDB, _limit, offset, std::ref(_filter), std::ref(_sort));
+    thread->completion(std::ref(model), _tableWorkInDB, _rowsPerPage * _maxPageModel, offset, std::ref(_filter), std::ref(_sort));
 }
 
-void MainWindow::startLoadModelFinished()
+void SearchWindow::startLoadModelFinished()
 {
     blockingInterface(true);
     _statusBar->clearMessage();
@@ -445,18 +444,18 @@ void MainWindow::startLoadModelFinished()
         searchInModels();
 }
 
-void MainWindow::threadFinished()
+void SearchWindow::threadFinished()
 {
     _nextButton->setEnabled(true);
     _prevButton->setEnabled(true);
 }
 
-void MainWindow::on_clearSearch_clicked()
+void SearchWindow::on_clearSearch_clicked()
 {
     _searchText->clear();
 }
 
-void MainWindow::updateTablePage()
+void SearchWindow::updateTablePage()
 {
     updateCurrentPageInLabel();
 
@@ -471,12 +470,12 @@ void MainWindow::updateTablePage()
     }
 }
 
-void MainWindow::updateCurrentPageInLabel()
+void SearchWindow::updateCurrentPageInLabel()
 {
     _labelCurrentPage->setText(QString::number(_currentPage));
 }
 
-void MainWindow::on_pageNumberToNavigate_textChanged()
+void SearchWindow::on_pageNumberToNavigate_textChanged()
 {
     if(_pageNumberToNavigate->text() == "0")
         _pageNumberToNavigate->clear();
@@ -484,7 +483,7 @@ void MainWindow::on_pageNumberToNavigate_textChanged()
     _goToPageTimer.start(1000);
 }
 
-void MainWindow::goToPage(int currentPage)
+void SearchWindow::goToPage(int currentPage)
 {
     int setPages = _currentPage - currentPageInModel();
 
@@ -499,7 +498,7 @@ void MainWindow::goToPage(int currentPage)
     }
 }
 
-void MainWindow::on_prevButton_clicked()
+void SearchWindow::on_prevButton_clicked()
 {
     if(_currentPage > 1)
     {
@@ -522,7 +521,7 @@ void MainWindow::on_prevButton_clicked()
     }
 }
 
-void MainWindow::on_nextButton_clicked()
+void SearchWindow::on_nextButton_clicked()
 {
     if(_currentPage < _maxPage)
     {
@@ -547,7 +546,7 @@ void MainWindow::on_nextButton_clicked()
         QMessageBox::warning(this, "Внимание", "Данных больше нет!", QMessageBox::Ok);
 }
 
-void MainWindow::setModel(QSharedPointer<QSqlQueryModel> model)
+void SearchWindow::setModel(QSharedPointer<QSqlQueryModel> model)
 {
     if(model->rowCount() == 0)
     {
@@ -567,7 +566,7 @@ void MainWindow::setModel(QSharedPointer<QSqlQueryModel> model)
     updateTablePage();
 }
 
-void MainWindow::goToNextModel()
+void SearchWindow::goToNextModel()
 {
     _currentPage++;
 
@@ -578,7 +577,7 @@ void MainWindow::goToNextModel()
     loadingModel(_nextTreadModel, _models[1], nextOffset);
 }
 
-void MainWindow::goToPrevModel()
+void SearchWindow::goToPrevModel()
 {
     _currentPage--;
 
@@ -589,15 +588,11 @@ void MainWindow::goToPrevModel()
     loadingModel(_prevTreadModel, _models[2], prevOffset);
 }
 
-void MainWindow::blockingInterface(bool flag)
+void SearchWindow::blockingInterface(bool flag)
 {
-    _pushButton_search->setEnabled(flag);
-    _clearSearch->setEnabled(flag);
-    _addFilter->setEnabled(flag);
-    _clearFilter->setEnabled(flag);
-    _resetTable->setEnabled(flag);
-    _prevButton->setEnabled(flag);
-    _nextButton->setEnabled(flag);
+    QList<QPushButton*> pushbuttons = _centralwidget->findChildren<QPushButton*>();
+    for(QPushButton* pushbutton : pushbuttons)
+        pushbutton->setEnabled(flag);
 
     QList<QComboBox*> comboBoxs = _centralwidget->findChildren<QComboBox*>();
     for(QComboBox* comboBox : comboBoxs)
@@ -607,7 +602,7 @@ void MainWindow::blockingInterface(bool flag)
     _searchText->setEnabled(flag);
 }
 
-void MainWindow::refreshStartModel()
+void SearchWindow::refreshStartModel()
 {
     QString typeSort = _typeSort[_typeSorting->currentIndex()];
     QString column = _sortingColumn->currentText();
@@ -626,12 +621,12 @@ void MainWindow::refreshStartModel()
     initializationStartModel();
 }
 
-void MainWindow::setFilter(const QString &filter)
+void SearchWindow::setFilter(const QString &filter)
 {
     _filter = filter;
 }
 
-void MainWindow::on_addFilter_clicked()
+void SearchWindow::on_addFilter_clicked()
 {
     if (_filterDialog->exec() == QDialog::Accepted)
     {
@@ -640,7 +635,7 @@ void MainWindow::on_addFilter_clicked()
     }
 }
 
-void MainWindow::on_clearFilter_clicked()
+void SearchWindow::on_clearFilter_clicked()
 {
     if(!_filter.isEmpty())
     {
@@ -650,7 +645,7 @@ void MainWindow::on_clearFilter_clicked()
     }
 }
 
-int MainWindow::currentPageInModel()
+int SearchWindow::currentPageInModel()
 {
     int pageModel = _currentPage % _maxPageModel;
 
@@ -660,7 +655,7 @@ int MainWindow::currentPageInModel()
     return pageModel;
 }
 
-void MainWindow::searchInModels()
+void SearchWindow::searchInModels()
 {
     bool resultSearchInModel = false;
     _like = _searchText->text();
@@ -692,12 +687,12 @@ void MainWindow::searchInModels()
     searchInDB();
 }
 
-void MainWindow::on_searchText_textChanged()
+void SearchWindow::on_searchText_textChanged()
 {
     _searchTimer.start(1000);
 }
 
-void MainWindow::on_comboBox_currentTextChanged(const QString &arg1)
+void SearchWindow::on_comboBox_currentTextChanged(const QString &arg1)
 {
     Q_UNUSED(arg1);
 
@@ -705,7 +700,7 @@ void MainWindow::on_comboBox_currentTextChanged(const QString &arg1)
         searchInModels();
 }
 
-void MainWindow::blockAndOperate(QObject* widget, const std::function<void()>& operation)
+void SearchWindow::blockAndOperate(QObject* widget, const std::function<void()>& operation)
 {
     widget->blockSignals(true);
     operation();
@@ -713,7 +708,7 @@ void MainWindow::blockAndOperate(QObject* widget, const std::function<void()>& o
 }
 
 
-void MainWindow::on_resetTable_clicked()
+void SearchWindow::on_resetTable_clicked()
 {
     blockAndOperate(_searchText, [&]() { _searchText->clear(); });
     blockAndOperate(_sortingColumn, [&]() { _sortingColumn->setCurrentIndex(0); });
@@ -724,7 +719,7 @@ void MainWindow::on_resetTable_clicked()
     refreshStartModel();
 }
 
-void MainWindow::on_checkBox_stateChanged(int arg1)
+void SearchWindow::on_checkBox_stateChanged(int arg1)
 {
     if(arg1 == 2)
         _typeSearch.clear();
@@ -732,13 +727,13 @@ void MainWindow::on_checkBox_stateChanged(int arg1)
         _typeSearch = '%';
 }
 
-void MainWindow::on_pushButton_search_clicked()
+void SearchWindow::on_pushButton_search_clicked()
 {
     if(!_searchText->text().isEmpty())
         searchInModels();
 }
 
-void MainWindow::onHeaderClicked(int logicalIndex)
+void SearchWindow::onHeaderClicked(int logicalIndex)
 {
     QString headerText = _tableView->model()->headerData(logicalIndex, Qt::Horizontal).toString();
 
@@ -755,21 +750,21 @@ void MainWindow::onHeaderClicked(int logicalIndex)
         settingValueInComboBox(_searchColumn, headerText);
 }
 
-void MainWindow::settingValueInComboBox(QComboBox* comboBox, QString& headerText)
+void SearchWindow::settingValueInComboBox(QComboBox* comboBox, QString& headerText)
 {
     int comboBoxIndex = comboBox->findText(headerText);
     if (comboBoxIndex != -1)
         comboBox->setCurrentIndex(comboBoxIndex);
 }
 
-void MainWindow::setValueToMaxPage(int maxPage)
+void SearchWindow::setValueToMaxPage(int maxPage)
 {
     QMutexLocker locker(&mutex);
     _maxPage = maxPage;
     _labelMaxPage->setText(QString::number(_maxPage));
 }
 
-void MainWindow::changeNumberRows()
+void SearchWindow::changeNumberRows()
 {
     QPushButton* button = (QPushButton*)sender();
     QStringList nums;
@@ -783,12 +778,18 @@ void MainWindow::changeNumberRows()
         return;
     }
 
-    for(QPushButton* buttonNum : _numberRows)
-        buttonNum->setEnabled(true);
-
-    button->setEnabled(false);
-
     int num = nums[2].toInt();
+
+    if(_rowsPerPage == num)
+        return;
+
     _rowsPerPage = num;
+
+    for(QPushButton* buttonNum : _numberRows)
+        buttonNum->setStyleSheet("");
+
+    button->setStyleSheet(_pushButtonStyleSheet);
+
+
     refreshStartModel();
 }
