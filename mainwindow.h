@@ -63,6 +63,8 @@ class SearchWindow : public QMainWindow
 
     QString _tableWorkInDB;
 
+    bool _autoNumRows;
+
 private:
     QWidget* _centralwidget;
 
@@ -99,6 +101,7 @@ private:
     QPushButton* _resetTable;
     QPushButton* _prevButton;
     QPushButton* _nextButton;
+    QPushButton* _automaticNumberRows;
 
     QVector<QPushButton*> _numberRows;
 
@@ -156,6 +159,8 @@ private:
     void renderingLayout_5();
     void blockAndOperate(QObject* widget, const std::function<void()>& operation);
     void setValueToMaxPage(int maxPage);
+    void resizeEvent(QResizeEvent* event) override;
+    void automaticNumberRows();
 
 private slots:
     void on_clearSearch_clicked();

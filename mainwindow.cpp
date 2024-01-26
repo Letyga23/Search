@@ -380,6 +380,13 @@ void SearchWindow::renderingLayout_5()
         _numberRows.push_back(numberRows);
     }
 
+    _automaticNumberRows = new QPushButton(_centralwidget);
+    _automaticNumberRows->setFont(font);
+    _automaticNumberRows->setText("Авто");
+    _automaticNumberRows->setObjectName("_automaticNumberRows");
+    _horizontalLayout_5->addWidget(_automaticNumberRows);
+    _numberRows.push_back(_automaticNumberRows);
+
     _numberRows[0]->setStyleSheet(_pushButtonStyleSheet);
 
     _horizontalSpacer_8 = new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
@@ -767,8 +774,22 @@ void SearchWindow::setValueToMaxPage(int maxPage)
 void SearchWindow::changeNumberRows()
 {
     QPushButton* button = (QPushButton*)sender();
-    QStringList nums;
-    nums = button->objectName().split('_');
+
+    for(QPushButton* buttonNum : _numberRows)
+        buttonNum->setStyleSheet("");
+
+    button->setStyleSheet(_pushButtonStyleSheet);
+
+    if(button->objectName() == "_automaticNumberRows")
+    {
+        _autoNumRows = true;
+        automaticNumberRows();
+        return;
+    }
+    else
+        _autoNumRows = false;
+
+    QStringList nums = button->objectName().split('_');
 
     if (nums.size() >= 3)
         QString num = nums[2];
@@ -785,10 +806,25 @@ void SearchWindow::changeNumberRows()
 
     _rowsPerPage = num;
 
-    for(QPushButton* buttonNum : _numberRows)
-        buttonNum->setStyleSheet("");
-
-    button->setStyleSheet(_pushButtonStyleSheet);
-
     refreshStartModel();
+}
+
+void SearchWindow::resizeEvent(QResizeEvent* event)
+{
+    QMainWindow::resizeEvent(event);
+
+    if(_autoNumRows)
+        automaticNumberRows();
+}
+
+void SearchWindow::automaticNumberRows()
+{
+    if(_tableView->model())
+    {
+        int visibleHeight = _tableView->viewport()->height();
+        int rowHeight = _tableView->verticalHeader()->defaultSectionSize();
+
+        _rowsPerPage = visibleHeight / rowHeight;
+        refreshStartModel();
+    }
 }
