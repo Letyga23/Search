@@ -1,5 +1,4 @@
 ﻿#include "mainwindow.h"
-QMutex mutex;
 
 SearchWindow::SearchWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -10,7 +9,7 @@ SearchWindow::SearchWindow(QWidget *parent)
     renderingInterface();
     connects();
 
-    refreshStartModel();
+    _getNamesColumn->getNameColumn(_tableWorkInDB);
 }
 
 SearchWindow::~SearchWindow()
@@ -117,6 +116,7 @@ void SearchWindow::creatingObjects()
     _prevTreadModel = QSharedPointer<MyThread>::create();
     _startTreadModel = QSharedPointer<MyThread>::create();
     _getMaxPageTread = QSharedPointer<MyThread>::create();
+    _getNamesColumn = QSharedPointer<MyThread>::create();
 }
 
 void SearchWindow::connects()
@@ -125,6 +125,7 @@ void SearchWindow::connects()
     connect(_nextTreadModel.get(), &MyThread::completedSuccessfully, this, &SearchWindow::threadFinished);
     connect(_prevTreadModel.get(), &MyThread::completedSuccessfully, this, &SearchWindow::threadFinished);
     connect(_getMaxPageTread.get(), &MyThread::returnMaxPage, this, &SearchWindow::setValueToMaxPage);
+    connect(_getNamesColumn.get(), &MyThread::toSendNameColumng, this, &SearchWindow::setValueNameColumn);
 
     connect(_filterDialog.get(), &FilterDialog::filterSelected, this, &SearchWindow::setFilter);
 
@@ -199,8 +200,6 @@ void SearchWindow::renderingLayout_1()
     _horizontalLayout->addWidget(_labelSearch);
 
     _searchColumn = new QComboBox(_centralwidget);
-    _searchColumn->addItem("Имя");
-    _searchColumn->addItem("Фамилия");
     _searchColumn->setFont(_font1);
     _horizontalLayout->addWidget(_searchColumn);
 
@@ -257,8 +256,6 @@ void SearchWindow::renderingLayout_2()
     _horizontalLayout_2->addWidget(_labelSortColumn);
 
     _sortingColumn = new QComboBox(_centralwidget);
-    _sortingColumn->addItem("Имя");
-    _sortingColumn->addItem("Фамилия");
     _sortingColumn->setFont(_font1);
     _horizontalLayout_2->addWidget(_sortingColumn);
 
@@ -624,7 +621,7 @@ void SearchWindow::refreshStartModel()
     _pageNumberToNavigate->clear();
     _currentPage = 1;
 
-    _getMaxPageTread->getMaxPage(_tableWorkInDB, _rowsPerPage, _filter);
+    _getMaxPageTread->getMaxPage(std::ref(_tableWorkInDB), _rowsPerPage, _filter);
     initializationStartModel();
 }
 
@@ -825,6 +822,26 @@ void SearchWindow::automaticNumberRows()
         int rowHeight = _tableView->verticalHeader()->defaultSectionSize();
 
         _rowsPerPage = visibleHeight / rowHeight;
+        refreshStartModel();
+    }
+}
+
+void SearchWindow::setValueNameColumn(QVector<QString>* namesColumn)
+{
+    for(QString nameColumn : *namesColumn)
+    {
+        _sortingColumn->blockSignals(true);
+        _sortingColumn->addItem(nameColumn);
+        _sortingColumn->blockSignals(false);
+
+        _searchColumn->blockSignals(true);
+        _searchColumn->addItem(nameColumn);
+        _searchColumn->blockSignals(false);
+    }
+
+    if(!namesColumn->isEmpty())
+    {
+        delete namesColumn;
         refreshStartModel();
     }
 }

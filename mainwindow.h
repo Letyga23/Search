@@ -41,9 +41,12 @@ class SearchWindow : public QMainWindow
     int _minPageModel;
     int _maxPage;
     int _rowCountModel;
+    bool _autoNumRows;
     QString _filter;
     QString _sort;
     QString _typeSearch;
+    QString _tableWorkInDB;
+    QMutex mutex;
 
     QMap<int, QString> _typeSort;
 
@@ -53,6 +56,7 @@ class SearchWindow : public QMainWindow
     QSharedPointer<MyThread> _nextTreadModel;
     QSharedPointer<MyThread> _prevTreadModel;
     QSharedPointer<MyThread> _getMaxPageTread;
+    QSharedPointer<MyThread> _getNamesColumn;
 
     QString _like;
     QString _column;
@@ -60,10 +64,6 @@ class SearchWindow : public QMainWindow
 
     QTimer _searchTimer;
     QTimer _goToPageTimer;
-
-    QString _tableWorkInDB;
-
-    bool _autoNumRows;
 
 private:
     QWidget* _centralwidget;
@@ -124,7 +124,6 @@ private:
     QString _comboBoxStyleSheet;
     QString _pushButtonStyleSheet;
 
-
 public:
     SearchWindow(QWidget* parent = nullptr);
     ~SearchWindow();
@@ -161,6 +160,7 @@ private:
     void setValueToMaxPage(int maxPage);
     void resizeEvent(QResizeEvent* event) override;
     void automaticNumberRows();
+    void setValueNameColumn(QVector<QString>* namesColumn);
 
 private slots:
     void on_clearSearch_clicked();
