@@ -416,7 +416,7 @@ void SearchWindow::searchInDB()
             else if (i == (numThreads - 1))
                 QMessageBox::warning(this, "Внимание", "Данных нет!", QMessageBox::Ok);
         });
-        searchTask->search(_tableWorkInDB, _column, _like, _typeSearch, _filter, _sort, limit, offset);
+        searchTask->search(_tableWorkInDB, _column, _like, _typeSearch, _filter, _sort, limit, offset, _rowsPerPage);
     }
 }
 

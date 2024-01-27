@@ -17,7 +17,6 @@ class MyThread : public QThread
     std::function<void()> _task;
     QSharedPointer<QSqlDatabase> _db;
     QSharedPointer<QSqlQueryModel> _query;
-    QAtomicInt _atomicFlag;
 
 public:
     QMutex _runThreadMutex;
@@ -32,7 +31,7 @@ public:
     void setTask(std::function<void()> task);
     void completion(QSharedPointer<QSqlQueryModel> model, QString nameTable, int limit, int offset, QString filters, QString sort);
     void getMaxPage(QString nameTable, int rowsPerPage, QString filters);
-    void search(QString nameTable, QString column, QString like, QString typeSearch, QString filters, QString sort, int limit, int offset);
+    void search(QString nameTable, QString column, QString like, QString typeSearch, QString filters, QString sort, int limit, int offset, int rowsPerPage);
     bool isRun();
 
 protected:
