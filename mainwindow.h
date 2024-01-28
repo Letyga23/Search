@@ -30,6 +30,7 @@
 #include <QTableView>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <QTimer>
 
 class SearchWindow : public QMainWindow
 {
@@ -40,15 +41,16 @@ class SearchWindow : public QMainWindow
     int _maxPageModel;
     int _minPageModel;
     int _maxPage;
-    int _rowCountModel;
     bool _autoNumRows;
     QString _filter;
-    QString _sort;
+    QString _columtSort;
+    QString _typeSort;
     QString _typeSearch;
     QString _tableWorkInDB;
-    QMutex mutex;
+    QMutex _mutex;
+    QTimer _resizeTimer;
 
-    QMap<int, QString> _typeSort;
+    QMap<int, QString> _typesSorting;
 
     QVector<QSharedPointer<QSqlQueryModel>> _models;
 

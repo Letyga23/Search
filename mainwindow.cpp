@@ -27,10 +27,10 @@ void SearchWindow::assigningValues()
 
     _tableWorkInDB = "name_pred";
 
-    _typeSort =
+    _typesSorting =
     {
-        {0, " ASC"},
-        {1, " DESC"}
+        {0, "ASC"},
+        {1, "DESC"}
     };
 
     _font1.setFamily("Segoe UI");
@@ -76,11 +76,12 @@ void SearchWindow::assigningValues()
 
     _searchTimer.setSingleShot(true);
     _goToPageTimer.setSingleShot(true);
+    _resizeTimer.setSingleShot(true);
 }
 
 void SearchWindow::workingWithTableView()
 {
-    _tableView = new QTableView(_centralwidget);
+    _tableView = new QTableView(this);
     _tableView->setFont(_font2);
     _tableView->setStyleSheet("selection-background-color: rgb(42, 117, 255);");
     _tableView->setWordWrap(false);
@@ -94,8 +95,12 @@ void SearchWindow::workingWithTableView()
     //Скрыть номер строк в tableView
     _tableView->verticalHeader()->setVisible(false);
 
-    //Устанавка растягивания для заголовков строк и столбцов на всю ширину
+    _tableView->horizontalHeader()->setStyleSheet("QHeaderView { font-size: 14pt; }");
+
+    //Устанавка растягивания для заголовков строк и столбцов на по размеру содержимого
     _tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+
+    //Устанавка растягивания для строк и столбцов на всю высоту
     _tableView->verticalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 
     //Запрет редактирования данных в ячейке
@@ -132,11 +137,9 @@ void SearchWindow::connects()
     connect(_sortingColumn, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SearchWindow::refreshStartModel);
     connect(_typeSorting, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SearchWindow::refreshStartModel);
 
-    connect(&_searchTimer, &QTimer::timeout, this, [=]()
-    {
-        if(!_searchText->text().isEmpty())
-            searchInModels();
-    });
+    connect(&_searchTimer, &QTimer::timeout, this, &SearchWindow::searchInModels);
+
+    connect(&_resizeTimer, &QTimer::timeout, this, &SearchWindow::automaticNumberRows);
 
     connect(&_goToPageTimer, &QTimer::timeout, this, [=]()
     {
@@ -413,7 +416,7 @@ void SearchWindow::searchInDB()
             else if (i == (numThreads - 1))
                 QMessageBox::warning(this, "Внимание", "Данных нет!", QMessageBox::Ok);
         });
-        searchTask->search(_tableWorkInDB, _column, _like, _typeSearch, _filter, _sort, limit, offset, _rowsPerPage);
+        searchTask->search(_tableWorkInDB, _column, _like, _typeSearch, _filter, _columtSort, _typeSort, limit, offset, _rowsPerPage);
     }
 }
 
@@ -435,7 +438,7 @@ void SearchWindow::initializationStartModel()
 
 void SearchWindow::loadingModel(QSharedPointer<MyThread> thread, QSharedPointer<QSqlQueryModel> model, int offset)
 {
-    thread->completion(std::ref(model), _tableWorkInDB, _rowsPerPage * _maxPageModel, offset, std::ref(_filter), std::ref(_sort));
+    thread->completion(std::ref(model), _tableWorkInDB, _rowsPerPage * _maxPageModel, offset, _filter, _columtSort, _typeSort);
 }
 
 void SearchWindow::startLoadModelFinished()
@@ -466,8 +469,8 @@ void SearchWindow::updateTablePage()
     int startIndex = (currentPageInModel() - 1) * _rowsPerPage;
     int endIndex = startIndex + _rowsPerPage;
 
-    _rowCountModel = _tableView->model()->rowCount();
-    for (int row = 0; row < _rowCountModel; row++)
+    int rowCountModel = _tableView->model()->rowCount();
+    for (int row = 0; row < rowCountModel; row++)
     {
         bool rowVisible = (row >= startIndex && row < endIndex);
         _tableView->setRowHidden(row, !rowVisible);
@@ -560,12 +563,14 @@ void SearchWindow::setModel(QSharedPointer<QSqlQueryModel> model)
 
     _tableView->setModel(model.data());
 
-    _rowCountModel = _tableView->model()->rowCount();
+    _tableView->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
 
-    if(model->columnCount() > 0)
-        _tableView->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
-
-    _tableView->horizontalHeader()->setStyleSheet("QHeaderView { font-size: 14pt; }");
+    for (int col = 1; col < model->columnCount(); ++col)
+    {
+        QString originalHeaderText = model->headerData(col, Qt::Horizontal).toString();
+        QString wrappedHeaderText = originalHeaderText.replace(" ", "\n");
+        model->setHeaderData(col, Qt::Horizontal, wrappedHeaderText);
+    }
 
     updateTablePage();
 }
@@ -608,9 +613,8 @@ void SearchWindow::blockingInterface(bool flag)
 
 void SearchWindow::refreshStartModel()
 {
-    QString typeSort = _typeSort[_typeSorting->currentIndex()];
-    QString column = _sortingColumn->currentText();
-    _sort = column + typeSort;
+    _typeSort = _typesSorting[_typeSorting->currentIndex()];
+    _columtSort = _sortingColumn->currentText();
     _like.clear();
 
     blockingInterface(false);
@@ -621,7 +625,7 @@ void SearchWindow::refreshStartModel()
     _pageNumberToNavigate->clear();
     _currentPage = 1;
 
-    _getMaxPageTread->getMaxPage(std::ref(_tableWorkInDB), _rowsPerPage, _filter);
+    _getMaxPageTread->getMaxPage(_tableWorkInDB, _rowsPerPage, _filter);
     initializationStartModel();
 }
 
@@ -661,6 +665,9 @@ int SearchWindow::currentPageInModel()
 
 void SearchWindow::searchInModels()
 {
+    if(_searchText->text().isEmpty())
+        return;
+
     bool resultSearchInModel = false;
     _like = _searchText->text();
     _column = _searchColumn->currentText();
@@ -740,6 +747,7 @@ void SearchWindow::on_pushButton_search_clicked()
 void SearchWindow::onHeaderClicked(int logicalIndex)
 {
     QString headerText = _tableView->model()->headerData(logicalIndex, Qt::Horizontal).toString();
+    headerText = headerText.replace("\n", " ");
 
     if (_sortingColumn->currentText() == headerText)
     {
@@ -763,7 +771,7 @@ void SearchWindow::settingValueInComboBox(QComboBox* comboBox, QString& headerTe
 
 void SearchWindow::setValueToMaxPage(int maxPage)
 {
-    QMutexLocker locker(&mutex);
+    QMutexLocker locker(&_mutex);
     _maxPage = maxPage;
     _labelMaxPage->setText(QString::number(_maxPage));
 }
@@ -810,12 +818,14 @@ void SearchWindow::resizeEvent(QResizeEvent* event)
 {
     QMainWindow::resizeEvent(event);
 
-    if(_autoNumRows)
-        automaticNumberRows();
+    _resizeTimer.start(500);
 }
 
 void SearchWindow::automaticNumberRows()
 {
+    if(!_autoNumRows)
+        return;
+
     if(_tableView->model())
     {
         int visibleHeight = _tableView->viewport()->height();

@@ -2,7 +2,6 @@
 #include <QDebug>
 #include <QSqlError>
 #include <QRandomGenerator>
-#include "mainwindow.h"
 
 QMutex MyThread::_searchMutex;
 bool MyThread::_resultIsFound = false;
@@ -37,7 +36,7 @@ void MyThread::run()
     }
 }
 
-void MyThread::completion(QSharedPointer<QSqlQueryModel> model, QString nameTable, int limit, int offset, QString filters, QString sort)
+void MyThread::completion(QSharedPointer<QSqlQueryModel> model, QString nameTable, int limit, int offset, QString filters, QString columnsSort, QString typeSort)
 {
     setTask([=]()
     {
@@ -46,17 +45,18 @@ void MyThread::completion(QSharedPointer<QSqlQueryModel> model, QString nameTabl
         _db->open();
 
         QString filterLimit = QString(" LIMIT %1 OFFSET %2").arg(limit).arg(offset);
-        QString request("CREATE TEMPORARY TABLE temp_table AS SELECT ROW_NUMBER() OVER () AS №, sorted_data.* FROM "
-                        "(SELECT * FROM " + nameTable + " ORDER BY " + sort + ") AS sorted_data WHERE 1=1" + filters + filterLimit);
+        QString request("CREATE TEMPORARY TABLE temp_" + nameTable + " AS SELECT ROW_NUMBER() OVER () AS №, sorted_data.* FROM "
+                        "(SELECT * FROM " + nameTable + " ORDER BY [" + columnsSort + "] " + typeSort + ") AS sorted_data WHERE 1=1" + filters + filterLimit);
 
         _query->setQuery(request, *_db);
 
         if (!_query->lastError().isValid())
         {
-            QString zapros = "SELECT * FROM temp_table;";
+            QString zapros = "SELECT * FROM temp_" + nameTable;
             model->setQuery(zapros, *_db);
-            emit completedSuccessfully();
         }
+
+        emit completedSuccessfully();
 
         _db->close();
     });
@@ -70,13 +70,6 @@ void MyThread::getMaxPage(QString nameTable, int rowsPerPage, QString filters)
     setTask([=]()
     {
         MyThread::sleep(2);
-
-        QString connectionName = "Connection_" + QString::number(QRandomGenerator::global()->generate());
-        QSharedPointer<QSqlDatabase> _db = QSharedPointer<QSqlDatabase>::create(QSqlDatabase::addDatabase("QSQLITE", connectionName));
-        _db->setDatabaseName("Database/name.sqlite");
-
-        QSharedPointer<QSqlQueryModel> _query = QSharedPointer<QSqlQueryModel>::create();
-
         _db->open();
 
         QString request("SELECT COUNT(*) FROM " + nameTable + " WHERE 1=1 " + filters);
@@ -87,8 +80,7 @@ void MyThread::getMaxPage(QString nameTable, int rowsPerPage, QString filters)
 
         if (!_query->lastError().isValid())
         {
-            QModelIndex index = _query->index(0, 0);
-            double rowCount = _query->data(index).toDouble();
+            double rowCount = _query->data(_query->index(0, 0)).toDouble();
             int maxPage = static_cast<int>(std::ceil(rowCount / rowsPerPage));
             emit returnMaxPage(maxPage);
         }
@@ -97,22 +89,19 @@ void MyThread::getMaxPage(QString nameTable, int rowsPerPage, QString filters)
     start();
 }
 
-void MyThread::search(QString nameTable, QString column, QString like, QString typeSearch, QString filters, QString sort, int limit, int offset, int rowsPerPage)
+void MyThread::search(QString nameTable, QString column, QString like, QString typeSearch, QString filters, QString columnsSort, QString typeSort, int limit, int offset, int rowsPerPage)
 {
     setTask([=]()
     {
         if(!_resultIsFound)
         {
             _db->open();
-
             QString request("SELECT numbered_rows.№ FROM (SELECT ROW_NUMBER() OVER "
-                            "(ORDER BY " + sort + ") AS №, * FROM " + nameTable + " WHERE 1=1 " + filters +
-                            " LIMIT " + QString::number(limit) + " OFFSET " + QString::number(offset) + ")"
-                            " AS numbered_rows WHERE numbered_rows." + column + " LIKE '" + like + typeSearch + "' LIMIT 1");
+                            "(ORDER BY '" + columnsSort + "' " + typeSort + ") AS №, * FROM " + nameTable + " WHERE 1=1 " + filters +
+                            " LIMIT " + QString::number(limit) + " OFFSET " + QString::number(offset) + ") "
+                            "AS numbered_rows WHERE numbered_rows." + column + " LIKE '" + like + typeSearch + "' LIMIT 1");
 
             _query->setQuery(request, *_db);
-
-            _db->close();
 
             int currentPage{};
 
@@ -120,11 +109,11 @@ void MyThread::search(QString nameTable, QString column, QString like, QString t
             {
                 QMutexLocker locker(&_searchMutex);
                 _resultIsFound = true;
-                QModelIndex index = _query->index(0, 0);
-                double row = _query->data(index).toDouble();
+                double row = _query->data(_query->index(0, 0)).toDouble();
                 currentPage = static_cast<int>(std::ceil(row / rowsPerPage));
             }
 
+            _db->close();
             emit searchResultFound(currentPage, _resultIsFound);
         }
     });
@@ -169,4 +158,21 @@ bool MyThread::isRun()
     }
     else
         return true;
+}
+
+void MyThread::request(QString request)
+{
+    setTask([=]()
+    {
+        _db->open();
+        _query->setQuery(request, *_db);
+        _db->close();
+
+        if (_query->lastError().isValid())
+            qDebug() << _query->lastError();
+        else
+            emit requestFinished();
+    });
+
+    start();
 }
