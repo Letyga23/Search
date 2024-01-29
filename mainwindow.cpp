@@ -27,6 +27,9 @@ void SearchWindow::assigningValues()
 
     _tableWorkInDB = "name_pred";
 
+    _autoNumRows = false;
+    _sortingOn = false;
+
     _typesSorting =
     {
         {0, "ASC"},
@@ -134,8 +137,8 @@ void SearchWindow::connects()
 
     connect(_filterDialog.get(), &FilterDialog::filterSelected, this, &SearchWindow::setFilter);
 
-    connect(_sortingColumn, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SearchWindow::refreshStartModel);
-    connect(_typeSorting, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SearchWindow::refreshStartModel);
+    connect(_sortingColumn, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SearchWindow::sorting);
+    connect(_typeSorting, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SearchWindow::sorting);
 
     connect(&_searchTimer, &QTimer::timeout, this, &SearchWindow::searchInModels);
 
@@ -167,6 +170,7 @@ void SearchWindow::connects()
     connect(_pageNumberToNavigate, &QLineEdit::textChanged, this, &SearchWindow::on_pageNumberToNavigate_textChanged);
 
     connect(_checkBox, &QCheckBox::stateChanged, this, &SearchWindow::on_checkBox_stateChanged);
+    connect(_sorting, &QCheckBox::stateChanged, this, &SearchWindow::on_sorting_stateChanged);
 }
 
 void SearchWindow::renderingInterface()
@@ -272,6 +276,11 @@ void SearchWindow::renderingLayout_2()
     _typeSorting->addItem("Убыванию (Я-А)");
     _typeSorting->setFont(_font1);
     _horizontalLayout_2->addWidget(_typeSorting);
+
+    _sorting = new QCheckBox(this);
+    _sorting->setFont(_font2);
+    _sorting->setText("Сортировать");
+    _horizontalLayout_2->addWidget(_sorting);
 
     _horizontalSpacer = new QSpacerItem(40, 20, QSizePolicy::Expanding);
     _horizontalLayout_2->addItem(_horizontalSpacer);
@@ -607,14 +616,15 @@ void SearchWindow::blockingInterface(bool flag)
     for(QComboBox* comboBox : comboBoxs)
         comboBox->setEnabled(flag);
 
+    _sorting->setEnabled(flag);
     _pageNumberToNavigate->setEnabled(flag);
     _searchText->setEnabled(flag);
 }
 
 void SearchWindow::refreshStartModel()
 {
+    _columtSort = (_sortingOn) ? _sortingColumn->currentText() : "";
     _typeSort = _typesSorting[_typeSorting->currentIndex()];
-    _columtSort = _sortingColumn->currentText();
     _like.clear();
 
     blockingInterface(false);
@@ -746,6 +756,9 @@ void SearchWindow::on_pushButton_search_clicked()
 
 void SearchWindow::onHeaderClicked(int logicalIndex)
 {
+    if(!_sortingOn)
+        return;
+
     QString headerText = _tableView->model()->headerData(logicalIndex, Qt::Horizontal).toString();
     headerText = headerText.replace("\n", " ");
 
@@ -854,4 +867,19 @@ void SearchWindow::setValueNameColumn(QVector<QString>* namesColumn)
         delete namesColumn;
         refreshStartModel();
     }
+}
+
+void SearchWindow::on_sorting_stateChanged(int arg1)
+{
+    _sortingOn = (arg1 == 2) ? true : false;
+
+    refreshStartModel();
+}
+
+void SearchWindow::sorting()
+{
+    if(!_sortingOn)
+        return;
+
+    refreshStartModel();
 }
