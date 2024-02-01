@@ -221,14 +221,14 @@ void SearchWindow::renderingLayout_1()
 
     _pushButton_search = new QPushButton(_centralwidget);
     _pushButton_search->setFont(_font2);
-    _pushButton_search->setIcon(QIcon(":/assets/поиск.png"));
+    _pushButton_search->setIcon(QIcon(":/assets/search.png"));
     _pushButton_search->setIconSize(QSize(32, 32));
     _pushButton_search->setStyleSheet(_pushButtonStyleSheet);
     _horizontalLayout->addWidget(_pushButton_search);
 
     _clearSearch = new QPushButton(_centralwidget);
     _clearSearch->setFont(_font2);
-    _clearSearch->setIcon(QIcon(":/assets/очистить поиск.png"));
+    _clearSearch->setIcon(QIcon(":/assets/clearSearch.png"));
     _clearSearch->setIconSize(QSize(32, 32));
     _clearSearch->setStyleSheet(_pushButtonStyleSheet);
     _horizontalLayout->addWidget(_clearSearch);
@@ -238,14 +238,14 @@ void SearchWindow::renderingLayout_1()
 
     _addFilter = new QPushButton(_centralwidget);
     _addFilter->setFont(_font2);
-    _addFilter->setIcon(QIcon(":/assets/добавить фильтр.png"));
+    _addFilter->setIcon(QIcon(":/assets/addFilter.png"));
     _addFilter->setIconSize(QSize(32, 32));
     _addFilter->setStyleSheet(_pushButtonStyleSheet);
     _horizontalLayout->addWidget(_addFilter);
 
     _clearFilter = new QPushButton(_centralwidget);
     _clearFilter->setFont(_font2);
-    _clearFilter->setIcon(QIcon(":/assets/сбросить фильтр.png"));
+    _clearFilter->setIcon(QIcon(":/assets/clearFilter.png"));
     _clearFilter->setIconSize(QSize(32, 32));
     _clearFilter->setStyleSheet(_pushButtonStyleSheet);
     _horizontalLayout->addWidget(_clearFilter);

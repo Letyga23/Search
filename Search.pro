@@ -36,7 +36,7 @@ RESOURCES += \
 
 DISTFILES += \
     Database/name.sqlite \
-    assets/добавить фильтр.png \
-    assets/очистить поиск.png \
-    assets/поиск.png \
-    assets/сбросить фильтр.png
+    assets/addFilter.png \
+    assets/clearFilter.png \
+    assets/clearSearch.png \
+    assets/search.png \
